@@ -11,7 +11,9 @@ import java.util.stream.Stream;
 
 public class Graph {
 	private Vector<Vertex> _vertices;
-	private Vector<Agent> _agents;	
+	private Vector<Agent> _agents;
+	int _horizon = Integer.MAX_VALUE;
+	GameType gt;
 	private Graph(){
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
@@ -414,9 +416,13 @@ public class Graph {
 	}
 
 	private void parseln(String line){
-
-
-		if(isVertex(line)){
+		if(isGameType(line)){
+			String gtype[] = line.split(" ");
+			gt = GameType.valueOf(gtype[1]);
+		}else if(isHorizon(line)){
+			String hor[] = line.split(" ");
+			_horizon = Integer.decode(hor[1]);
+		}else if(isVertex(line)){
 			String vert[] = line.split(" ");
 			_vertices =  new Vector<Vertex>(getVertex(vert));
 			for(int i=1;i<=getVertex(vert);++i)
@@ -442,6 +448,12 @@ public class Graph {
 
 
 
+	private boolean isGameType(String line) {
+		return line.contains("#G");
+	}
+	private boolean isHorizon(String line) {
+		return line.contains("#H");
+	}
 	private boolean isAgent(String line) {
 		return line.contains("#A");
 	}
