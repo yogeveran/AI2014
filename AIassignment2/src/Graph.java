@@ -50,6 +50,13 @@ public class Graph {
 
 
 	}
+	
+	private static Graph initGraph() {
+		Graph g = new Graph();
+		g.buildGraph("graphass3.txt");
+		g.printGraph();
+		return g;
+	}
 
 	private static void runSimulation(Graph g) {
 		System.out.println("Running Simulation:");
@@ -207,12 +214,7 @@ public class Graph {
 	}
 
 
-	private static Graph initGraph() {
-		Graph g = new Graph();
-		g.buildGraph("graphass3.txt");
-		g.printGraph();
-		return g;
-	}
+
 
 	private void addAgent(String[] s) {
 		int agentStartVertex = 0;
@@ -225,33 +227,27 @@ public class Graph {
 			agentGoalVertex = getAgentGoalVertex(this,s);
 			this.addHuman(agentStartVertex,agentGoalVertex,_agents.size());
 			break;
-		case 2://Obama
-			this.addObama(_agents.size());
-			break;
-		case 3://Greedy Yazidi
-			agentStartVertex = getAgentStartVertex(this,s);
-			agentGoalVertex = getAgentGoalVertex(this,s);
-			this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
-			break;
-		case 4://Greedy Isis
+		case 3://Yazidi
+			switch(gt){
+			case ZeroSum:
+				agentStartVertex = getAgentStartVertex(this,s);
+				agentGoalVertex = getAgentGoalVertex(this,s);
+				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
+				break;
+			case nonZeroSum:
+				agentStartVertex = getAgentStartVertex(this,s);
+				agentGoalVertex = getAgentGoalVertex(this,s);
+				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
+				break;
+			case FullyCooperative:
+				agentStartVertex = getAgentStartVertex(this,s);
+				agentGoalVertex = getAgentGoalVertex(this,s);
+				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
+				break;
+			}
+		case 4: //Isis
 			agentStartVertex = getAgentStartVertex(this,s);
 			this.addIsis(agentStartVertex,_agents.size());
-			break;
-		case 5://Greedy Search Yazidi
-			agentStartVertex = getAgentStartVertex(this,s);
-			agentGoalVertex = getAgentGoalVertex(this,s);
-			this.addSearchYazidi(agentStartVertex,agentGoalVertex,_agents.size(), this);
-			break;
-		case 6://A* Search Yazidi
-			agentStartVertex = getAgentStartVertex(this,s);
-			agentGoalVertex = getAgentGoalVertex(this,s);
-			this.addAStarYazidi(agentStartVertex,agentGoalVertex,_agents.size(), this);
-			break;
-		case 7://RTA* Search Yazidi
-			agentStartVertex = getAgentStartVertex(this,s);
-			agentGoalVertex = getAgentGoalVertex(this,s);
-			int maxExpansions = getAgentMaxExpansions(this,s);
-			this.addRTAStarYazidi(agentStartVertex,agentGoalVertex,_agents.size(), this, maxExpansions);
 			break;
 		default:
 			System.exit(-1);
