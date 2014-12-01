@@ -227,7 +227,7 @@ public class Graph {
 			agentGoalVertex = getAgentGoalVertex(this,s);
 			this.addHuman(agentStartVertex,agentGoalVertex,_agents.size());
 			break;
-		case 3://Yazidi
+		case 2://Yazidi
 			switch(gt){
 			case ZeroSum:
 				agentStartVertex = getAgentStartVertex(this,s);
@@ -245,7 +245,11 @@ public class Graph {
 				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
 				break;
 			}
-		case 4: //Isis
+		case 3: //Isis
+			if(gt != GameType.ZeroSum){
+				System.out.println("Wrong type of game!");
+				System.exit(-1);			}
+				
 			agentStartVertex = getAgentStartVertex(this,s);
 			this.addIsis(agentStartVertex,_agents.size());
 			break;
