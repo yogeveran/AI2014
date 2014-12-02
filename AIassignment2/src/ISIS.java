@@ -1,18 +1,15 @@
 import java.util.List;
 
 
-public abstract class ISIS implements Agent {
-	private Vertex _location;
+public abstract class ISIS extends Agent {
+	
 	private int _foodCarried;
 	private List<Vertex> _path;
 	private Double _cost = 0.0;
-	private int _id;
 	
 	public ISIS(Vertex _location, int _foodCarried, int id) {
-		super();
-		this._location = _location;
+		super(id,_location);
 		this._foodCarried = _foodCarried;
-		this._id = id;
 	}
 	
 	@Override

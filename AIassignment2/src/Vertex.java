@@ -77,7 +77,7 @@ public class Vertex implements Comparable<Vertex> {
 	public boolean addHuman(Human toAdd){return _human.add(toAdd);}
 	public void addSupplies(Integer toAdd){_supplies+=toAdd;}
 	
-	public boolean removeYazidi(Yazidi y){
+	public boolean removeYazidi(Agent y){
 		return _yazidi.remove(y);
 	}
 	public boolean removeHuman(Human y){

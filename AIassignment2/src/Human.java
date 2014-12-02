@@ -4,20 +4,17 @@ import java.util.Scanner;
 import javax.tools.JavaFileManager.Location;
 
 
-public class Human implements Agent {
+public class Human extends Agent {
 
-	private Vertex _location;
 	private Vertex _goal;
 	private int _foodCarried;
 	private double _cost;
-	private int _id;
 	
 	public Human(Vertex _location, Vertex _goal, int _foodCarried, int id) {
-		super();
-		this._location = _location;
+		super(id,_location);
 		this._goal = _goal;
 		this._foodCarried = _foodCarried;
-		this._id = id;
+
 	}
 
 	@Override

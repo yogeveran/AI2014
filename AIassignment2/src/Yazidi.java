@@ -1,19 +1,16 @@
 import java.util.List;
 
 
-public abstract class Yazidi implements Agent {
+public abstract class Yazidi extends Agent {
 
-	protected int _id;
+	
 
 	public Yazidi(Vertex _location, Vertex _goal, int _foodCarried,int id) {
-		super();
-		this._location = _location;
+		super(id,_location);
 		this._goal = _goal;
 		this._foodCarried = _foodCarried;
 		this._path = null;
-		this._id = id;
 	}
-	protected Vertex _location;
 	protected Vertex _goal;
 	protected double _cost;
 	protected int _foodCarried;

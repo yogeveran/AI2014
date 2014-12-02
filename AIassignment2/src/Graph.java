@@ -12,6 +12,7 @@ public class Graph {
 	private Vector<Vertex> _vertices;
 	private Vector<Agent> _agents;
 	int _horizon = Integer.MAX_VALUE;
+	
 	GameType gt;
 	private Graph(){
 		_vertices = new Vector<Vertex>();
@@ -24,11 +25,22 @@ public class Graph {
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
 		_agents = new Vector<Agent>();
+
+		
 		for(Vertex v: g.get_vertices()){
 			Vertex newV = new Vertex(v.get_num(),v.view_supplies());
 			_vertices.add(newV);
 		}
 
+		for(Agent a: g._agents){
+			if(a instanceof ZSYazidi){
+				_agents.add(new ZSYazidi((ZSYazidi)a,_vertices));
+			}
+			if(a instanceof ZSISIS){
+				_agents.add(new ZSISIS((ZSISIS)a,_vertices));
+			}
+		}
+		
 		for(Vertex v: g.get_vertices()){
 			for(Edge e: v.view_neighbors()){
 				Edge newE = new Edge(_vertices.get((int) (e.get_target().get_num()-1)), e.get_weight());
@@ -63,7 +75,7 @@ public class Graph {
 	
 	private static Graph initGraph() {
 		Graph g = new Graph();
-		g.buildGraph("graphass3.txt");
+		g.buildGraph("graphs/graph.txt");
 		g.printGraph();
 		return g;
 	}
@@ -128,7 +140,7 @@ public class Graph {
 			removeFood((Yazidi)a);
 		if(a instanceof Human)
 			removeFood((Human)a);
-		a.addCost(1);
+		a.addCost(-1);
 	}
 	private static void caseTraverse(Agent a, Action act) {
 		if (a instanceof Yazidi) {
@@ -155,7 +167,7 @@ public class Graph {
 			a.get_location().view_human().remove(a);
 			a.set_location(vertex);
 			vertex.view_human().add(a);
-			a.addCost(cost);
+			a.addCost(-cost);
 			a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies()-edgeWeight);
 		}
 
@@ -163,21 +175,21 @@ public class Graph {
 	private static void removeFood(Human a) {
 		a.set_foodCarried(a.get_foodCarried()-1);
 		if(a.get_foodCarried()<0){
-			a.setCost(Double.POSITIVE_INFINITY);
+			a.setCost(Double.NEGATIVE_INFINITY);
 			a.get_location().removeHuman(a);
 		}
 	}
 	private static void Traverse(Yazidi a, Vertex vertex) {
 		if(!vertex.view_isis().isEmpty()||(a.findEdge(vertex).get_weight()>a.get_foodCarried())){
 			removeFood(a);
-			a.addCost(1);
+			a.addCost(-1);
 		}else{
 			double cost = a.findEdge(vertex).get_weight()*a.get_foodCarried();
 			int edgeWeight = (int) a.findEdge(vertex).get_weight();
 			a.get_location().view_yazidi().remove(a);
 			a.set_location(vertex);
 			vertex.view_yazidi().add(a);
-			a.addCost(cost);
+			a.addCost(-cost);
 			a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies()-edgeWeight);
 		}
 
@@ -198,7 +210,7 @@ public class Graph {
 	private static void removeFood(Yazidi a) {
 		a.set_foodCarried(a.get_foodCarried()-1);
 		if(a.get_foodCarried()<0){
-			a.setCost(Double.POSITIVE_INFINITY);
+			a.setCost(Double.NEGATIVE_INFINITY);
 			a.get_location().removeYazidi(a);
 		}
 	}
@@ -264,7 +276,7 @@ public class Graph {
 
 	private static int getAgentType(String[] s) {
 				int type = Integer.decode(s[1]);
-				if(0<type && type<8)
+				if(0<type && type<4)
 					return type;
 				return -1;
 	}
@@ -406,18 +418,34 @@ public class Graph {
 	public Vertex getAgentLocation(int i) {
 		for(Vertex v: _vertices)
 			if(!v.view_yazidi().isEmpty())
-				for(Yazidi y: v.view_yazidi())
+				for(Agent y: v.view_yazidi())
 					if(y._id==i)
 						return v;
 		return null;
 	}
-	public Vector<Action> getActions(int i) {
-		// TODO Auto-generated method stub
-		return null;
+	public Vector<ActionGraph> getActions(Agent agent) {
+		Vector<ActionGraph> res = new Vector<ActionGraph>();
+		
+		for(Edge e: agent._location.view_neighbors()){
+			Graph g2 = new Graph(this);
+			Vertex dest = g2._vertices.get((int) (e.get_target().get_num())-1);
+			
+			Action act = new Action(ActionType.Traverse, dest);
+			res.add(new ActionGraph(g2, act));
+		}
+		res.add(new ActionGraph(new Graph(this), new Action(ActionType.NoOp, null)));
+		return res;
 	}
-	public Graph apply(Action child) {
-		// TODO Auto-generated method stub
-		return null;
+	public Graph apply(Action act,Agent a) {
+		switch(act.get_type()){
+		case NoOp:
+			caseNoOp(a);
+			break;
+		case Traverse:
+			caseTraverse(a, act);
+			break;
+		}
+		return this;
 	}
 
 
