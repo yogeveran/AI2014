@@ -3,7 +3,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Scanner;
 import java.util.Vector;
 import java.util.stream.Stream;
@@ -22,7 +21,7 @@ public class Graph {
 		_vertices = new Vector<Vertex>(Arrays.asList(vertices));
 		_agents = new Vector<Agent>();
 	}
-	private Graph(Graph g){
+	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
 		_agents = new Vector<Agent>();
 		for(Vertex v: g.get_vertices()){
@@ -40,7 +39,18 @@ public class Graph {
 
 
 	}
-
+	public static  Graph makePowerGraph(Graph g){
+		Graph powerGraph =  new Graph(g);
+		for(Vertex a: powerGraph.get_vertices()){
+			for (Edge e : a.view_neighbors()){
+				if(!e.is_hasBeenPowerd()){
+					e.set_hasBeenPowerd(true);
+					e.powerWeight();
+				}
+			}
+		}
+		return powerGraph;
+	}
 	public static void main(String[] args) {
 		Graph g = initGraph();
 
@@ -66,33 +76,13 @@ public class Graph {
 				System.out.println("Which agent is working now::::::::::::::::::::::::: " + a);
 				if(a.getCost()!=Double.POSITIVE_INFINITY){
 					g.printWorld();
-					Action act = a.getAction(g);
+					Action act = a.getAction(new Graph(g));
 					switch(act.get_type()){
 					case NoOp:
 						caseNoOp(a);
 						break;
 					case Traverse:
 						caseTraverse(a, act);
-						break;
-					case Aid:
-						if(act.get_target().view_isis().isEmpty()&&act.get_target().view_yazidi().isEmpty()&&act.get_target().view_human().isEmpty()){
-							System.out.println("Add food to vertex "+act.get_target().getName());	
-							act.get_target().addSupplies(10);
-						}
-						else if(act.get_target().view_isis().isEmpty()){
-							if(act.get_target().view_human().isEmpty()){	
-								act.get_target().view_yazidi().get(0).addFood(10);
-								System.out.println("Add food to yazidi");
-							}else{
-								act.get_target().view_human().get(0).addFood(10);
-								System.out.println("Add food to human");
-							}
-						}
-						a.addCost(10);
-					case Bomb:
-						for(ISIS i: act.get_target().view_isis())
-							i.setCost(Double.POSITIVE_INFINITY);
-						act.get_target().RemoveIsis();
 						break;
 					}
 				}
@@ -214,8 +204,6 @@ public class Graph {
 	}
 
 
-
-
 	private void addAgent(String[] s) {
 		int agentStartVertex = 0;
 		int agentGoalVertex=0;
@@ -228,23 +216,10 @@ public class Graph {
 			this.addHuman(agentStartVertex,agentGoalVertex,_agents.size());
 			break;
 		case 2://Yazidi
-			switch(gt){
-			case ZeroSum:
 				agentStartVertex = getAgentStartVertex(this,s);
 				agentGoalVertex = getAgentGoalVertex(this,s);
 				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
 				break;
-			case nonZeroSum:
-				agentStartVertex = getAgentStartVertex(this,s);
-				agentGoalVertex = getAgentGoalVertex(this,s);
-				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
-				break;
-			case FullyCooperative:
-				agentStartVertex = getAgentStartVertex(this,s);
-				agentGoalVertex = getAgentGoalVertex(this,s);
-				this.addYazidi(agentStartVertex,agentGoalVertex,_agents.size());
-				break;
-			}
 		case 3: //Isis
 			if(gt != GameType.ZeroSum){
 				System.out.println("Wrong type of game!");
@@ -259,41 +234,6 @@ public class Graph {
 		}
 	}
 
-	private int getAgentMaxExpansions(Graph g, String[] s) {
-		if(g.getVertices().size()==0){
-			System.err.println("Why did you not add vertices?");
-			System.exit(-1);
-			}
-		return Integer.decode(s[4]);
-	}
-	private void addAStarYazidi(int agentStartVertex, int agentGoalVertex, int id, Graph g) {
-		Yazidi yazidi = new AStarYazidi(_vertices.get(agentStartVertex-1), _vertices.get(agentGoalVertex-1), _vertices.get(agentStartVertex-1).takeSupplies(), id, g);
-		this._agents.add(yazidi);
-		_vertices.get(agentStartVertex-1).addYazidi(yazidi);
-	}
-	private void addRTAStarYazidi(int agentStartVertex, int agentGoalVertex, int id, Graph g,int maxExpansions) {
-		Yazidi yazidi = new RTAStarYazidi(_vertices.get(agentStartVertex-1), _vertices.get(agentGoalVertex-1), _vertices.get(agentStartVertex-1).takeSupplies(), id, g, maxExpansions);
-		this._agents.add(yazidi);
-		_vertices.get(agentStartVertex-1).addYazidi(yazidi);
-	}
-	private void addSearchYazidi(int agentStartVertex, int agentGoalVertex, int id, Graph g) {
-		Yazidi yazidi = new GreedySearchYazidi(_vertices.get(agentStartVertex-1), _vertices.get(agentGoalVertex-1), _vertices.get(agentStartVertex-1).takeSupplies(), id, g);
-		this._agents.add(yazidi);
-		_vertices.get(agentStartVertex-1).addYazidi(yazidi);
-
-	}
-	@SuppressWarnings("unused")
-	private static int getAgentCount(Scanner s) {
-		while(true){
-			try{
-				System.out.println("Please enter amount of agents wanted:");
-				String line = getLine(s);
-				int count = Integer.decode(line);
-				if(count>0)
-					return count;
-			}catch (NumberFormatException e){}
-		}
-	}
 
 	public Vector<Vertex> get_vertices() {
 		return _vertices;
@@ -354,28 +294,34 @@ public class Graph {
 	private void addHuman(int agentStartVertex, int agentGoalVertex, int id) {
 
 		Human toAdd = new Human(_vertices.get(agentStartVertex-1),_vertices.get(agentGoalVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(),id);
-		this._agents.add(toAdd);//TODO CHANGE FROM 10
+		this._agents.add(toAdd);
 		_vertices.get(agentStartVertex-1).addHuman(toAdd);
 
 	}
 
 	private void addIsis(int agentStartVertex, int agentsAmount) {
-		ISIS toAdd = new ISIS(_vertices.get(agentStartVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(),agentsAmount);
-		this._agents.add(toAdd);//TODO CHANGE FROM 10
+		ISIS toAdd = new ZSISIS(_vertices.get(agentStartVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(),agentsAmount);
+		this._agents.add(toAdd);
 		_vertices.get(agentStartVertex-1).addIsis(toAdd);
 
 	}
 
-	private void addObama(int id) {
-		this._agents.add(new Obama(id));//TODO CHANGE FROM 10
-
-	}
 
 	private void addYazidi(int agentStartVertex, int agentGoalVertex,int id) {
-		Yazidi yazidi = new Yazidi(_vertices.get(agentStartVertex-1),_vertices.get(agentGoalVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(), id);
-		this._agents.add(yazidi);//TODO CHANGE FROM 10
+		Yazidi yazidi = null;
+		switch(gt){
+		case ZeroSum:
+			yazidi = new ZSYazidi(_vertices.get(agentStartVertex-1),_vertices.get(agentGoalVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(), id);
+			break;
+		case nonZeroSum:
+			yazidi = new NZSYazidi(_vertices.get(agentStartVertex-1),_vertices.get(agentGoalVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(), id);
+			break;
+		case FullyCooperative:
+			yazidi = new FCYazidi(_vertices.get(agentStartVertex-1),_vertices.get(agentGoalVertex-1),_vertices.get(agentStartVertex-1).takeSupplies(), id);
+			break;
+		}
+		this._agents.add(yazidi);
 		_vertices.get(agentStartVertex-1).addYazidi(yazidi);
-
 	}
 
 	private String getEdgeWeight(String[] edge) {
@@ -457,18 +403,23 @@ public class Graph {
 	private boolean isAgent(String line) {
 		return line.contains("#A");
 	}
-	public static  Graph makePowerGraph(Graph g){
-		Graph powerGraph =  new Graph(g);
-		for(Vertex a: powerGraph.get_vertices()){
-			for (Edge e : a.view_neighbors()){
-				if(!e.is_hasBeenPowerd()){
-					e.set_hasBeenPowerd(true);
-					e.powerWeight();
-				}
-			}
-		}
-		return powerGraph;
+	public Vertex getAgentLocation(int i) {
+		for(Vertex v: _vertices)
+			if(!v.view_yazidi().isEmpty())
+				for(Yazidi y: v.view_yazidi())
+					if(y._id==i)
+						return v;
+		return null;
 	}
+	public Vector<Action> getActions(int i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	public Graph apply(Action child) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 
 }

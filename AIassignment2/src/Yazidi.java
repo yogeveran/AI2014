@@ -1,9 +1,9 @@
 import java.util.List;
 
 
-public class Yazidi implements Agent {
+public abstract class Yazidi implements Agent {
 
-	private int _id;
+	protected int _id;
 
 	public Yazidi(Vertex _location, Vertex _goal, int _foodCarried,int id) {
 		super();
@@ -15,30 +15,13 @@ public class Yazidi implements Agent {
 	}
 	protected Vertex _location;
 	protected Vertex _goal;
+	protected double _cost;
 	protected int _foodCarried;
 	protected List<Vertex> _path;
-	protected double _cost;
+	
 	
 	@Override
-	public Action getAction(Graph g) {
-		if(this._path == null){
-			Dijkstra.computePaths(this._location,g,false);
-			this._path = Dijkstra.getShortestPathTo(_goal);
-			_path.remove(0);
-			
-			if(_path!=null){
-				System.out.print("Path of "+this+":");
-				for(Vertex v: _path)
-					System.out.print(v.getName()+", ");
-				System.out.println();
-			}else{
-				System.out.println(this + " found no solution.");
-			}
-			}
-		if(noRouteOrAtGoal()||notEnoughFood())
-			return new Action(ActionType.NoOp, null);
-		return new Action(ActionType.Traverse, _path.remove(0));
-	}
+	public abstract Action getAction(Graph g);
 
 	public Vertex get_location() {
 		return _location;

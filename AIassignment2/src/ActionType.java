@@ -1,4 +1,4 @@
 
 public enum ActionType {
- Traverse,NoOp,Aid,Bomb;
+ Traverse,NoOp;
 }
