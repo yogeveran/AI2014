@@ -122,7 +122,7 @@ public class Graph {
 
 	}
 	private static boolean shouldStop(Graph g) {
-		int yazidi = 0;
+/*		int yazidi = 0;
 		int deadOrGoal = 0;
 		for(Agent a: g.get_agents())
 			if(a instanceof Yazidi ){
@@ -135,7 +135,13 @@ public class Graph {
 				if((((Human) a).get_location() == ((Human) a).get_goal())||a.getCost() == Double.POSITIVE_INFINITY)
 					deadOrGoal++;
 			}
-		return (yazidi == deadOrGoal);
+		return (yazidi == deadOrGoal);*/
+		Yazidi yazidi = (Yazidi) g.get_agents().get(0);
+		boolean sameLoc = (yazidi._location==g.get_agents().get(1)._location);
+		boolean noFood = ((Yazidi)yazidi)._foodCarried<0;
+		boolean atGoal = yazidi._location==yazidi.get_goal();
+
+		return sameLoc||noFood||atGoal;
 	}
 	private static void caseNoOp(Agent a) {
 		if(a instanceof Yazidi)
@@ -436,9 +442,9 @@ public class Graph {
 			res.add(new ActionGraph(g2, act));
 		}
 		res.add(new ActionGraph(new Graph(this), new Action(ActionType.NoOp, null)));
-		for(ActionGraph ag: res)
-			System.out.print(ag.getAct()+",  ");
-		System.out.println();
+//		for(ActionGraph ag: res)
+//			System.out.print(ag.getAct()+",  ");
+//		System.out.println();
 		return res;
 	}
 	public Graph apply(Action act,Agent a) {
