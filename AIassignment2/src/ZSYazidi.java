@@ -68,7 +68,7 @@ public class ZSYazidi extends Yazidi {
 	private Agent getAgent(int i,Graph g) {
 		Vector<Agent> agents = g.get_agents();
 		for(Agent a: agents)
-			if(a._id == _id)
+			if(a._id == i)
 				return a;
 		return null;
 	}
@@ -78,8 +78,12 @@ public class ZSYazidi extends Yazidi {
 	}
 
 	private double Eval(Graph g) {
-		if(is_a_terminal_node(g))
-			return getAgent(_id, g).getCost();
+		if(is_a_terminal_node(g)){
+			Agent agent = getAgent(_id, g);
+			if((((Yazidi)agent).get_foodCarried()<0)||sameSpot(g))
+				return Double.NEGATIVE_INFINITY;
+			return agent.getCost();
+			}
 		else 
 			return h(g);
 	}
@@ -92,15 +96,22 @@ public class ZSYazidi extends Yazidi {
 	}
 
 	private boolean is_a_terminal_node(Graph g) {
-		Vertex goal = g.get_vertices().get((int) this._goal.get_num());//TODO CHECK if index is good
+		Yazidi yazidi = (Yazidi)getAgent(_id, g);
+		if(yazidi._foodCarried<0)
+			return true;
+		Vertex goal = yazidi.get_goal();
 		if((!goal.view_yazidi().isEmpty()))
 				for(Agent y: goal.view_yazidi())
 					if(y._id == this._id)
 						return true;
-		if(getLoc(this._id,g)==getLoc(1 - this._id,g))
+		if(sameSpot(g))
 			return true;
 		return false;
 		
+	}
+
+	private boolean sameSpot(Graph g) {
+		return getLoc(this._id,g)==getLoc(1 - this._id,g);
 	}
 
 	private Vertex getLoc(int _id, Graph g) {

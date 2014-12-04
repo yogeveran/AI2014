@@ -5,8 +5,6 @@ public class ZSISIS extends ISIS {
 
 	public ZSISIS(Vertex _location, int _foodCarried, int id) {
 		super(_location, _foodCarried, id);
-		System.out.println("isis"+id);
-		// TODO Auto-generated constructor stub
 	}
 
 	public ZSISIS(ZSISIS a, Vector<Vertex> _vertices) {
@@ -79,9 +77,12 @@ public class ZSISIS extends ISIS {
 	}
 
 	private double Eval(Graph g) {
-		if(is_a_terminal_node(g))
-			return -1*getAgent(1-_id, g).getCost();
-		else 
+		if(is_a_terminal_node(g)) {
+			Agent agent = getAgent(1-_id, g);
+			if((((Yazidi)agent).get_foodCarried()<0)||sameSpot(g))
+				return Double.NEGATIVE_INFINITY;
+			return -1*agent.getCost();
+		} else 
 			return h(g);
 	}
 
@@ -93,15 +94,22 @@ public class ZSISIS extends ISIS {
 	}
 
 	private boolean is_a_terminal_node(Graph g) {
-		Vertex goal = ((Yazidi)getAgent(1-_id, g)).get_goal();
+		Yazidi yazidi = (Yazidi)getAgent(1-_id, g);
+		if(yazidi._foodCarried<0)
+			return true;
+		Vertex goal = yazidi.get_goal();
 		if((!goal.view_yazidi().isEmpty()))
 				for(Agent y: goal.view_yazidi())
 					if(y._id == (1- this._id))
 						return true;
-		if(getLoc(this._id,g)==getLoc(1 - this._id,g))
+		if(sameSpot(g))
 			return true;
 		return false;
 		
+	}
+
+	private boolean sameSpot(Graph g) {
+		return getLoc(this._id,g)==getLoc(1 - this._id,g);
 	}
 
 	private Vertex getLoc(int _id, Graph g) {

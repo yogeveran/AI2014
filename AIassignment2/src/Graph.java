@@ -85,22 +85,24 @@ public class Graph {
 		while(!shouldStop(g)){
 			System.out.println("-------------------------------------------------");
 			for(Agent a: g.get_agents()){
-				System.out.println("Which agent is working now::::::::::::::::::::::::: " + a);
+				System.out.println("Agent is working now: " + a + " At Loc:"+a._location.get_num());
 				if(a.getCost()!=Double.POSITIVE_INFINITY){
-					g.printWorld();
+					//g.printWorld();
 					Action act = a.getAction(g);
 					switch(act.get_type()){
 					case NoOp:
+						System.out.println("Chose NoOp");
 						caseNoOp(a);
 						break;
 					case Traverse:
+						System.out.println("Chose To Traverse to: v"+act.get_target().get_num());
 						caseTraverse(a, act);
 						break;
 					}
 				}
 			}
-			g.printWorld();
-			g.printScores();
+			//g.printWorld();
+			//g.printScores();
 		}
 
 	}
@@ -434,6 +436,9 @@ public class Graph {
 			res.add(new ActionGraph(g2, act));
 		}
 		res.add(new ActionGraph(new Graph(this), new Action(ActionType.NoOp, null)));
+		for(ActionGraph ag: res)
+			System.out.print(ag.getAct()+",  ");
+		System.out.println();
 		return res;
 	}
 	public Graph apply(Action act,Agent a) {

@@ -19,4 +19,11 @@ public class Action {
 		return _target;
 	}
 
+	@Override
+	public String toString() {
+		return "Action [_type=" + _type + ", _target=" + _target + "]";
+	}
+	
+	
+
 }
