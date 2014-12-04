@@ -5,13 +5,10 @@ public class ZSYazidi extends Yazidi {
 
 	public ZSYazidi(Vertex _location, Vertex _goal, int _foodCarried, int id) {
 		super(_location, _goal, _foodCarried, id);
-		System.out.println("ZSYazidi"+id);
-		// TODO Auto-generated constructor stub
 	}
 
 	public ZSYazidi(ZSYazidi a, Vector<Vertex> _vertices) {
 		super(_vertices.get((int) (a._location.get_num()-1)), _vertices.get((int) (a._goal.get_num()-1)), a._foodCarried, a._id);
-		System.out.println("ZSYazidi"+_id);
 	}
 
 	@Override

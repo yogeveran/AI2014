@@ -11,7 +11,6 @@ public class ZSISIS extends ISIS {
 
 	public ZSISIS(ZSISIS a, Vector<Vertex> _vertices) {
 		super(_vertices.get((int) (a._location.get_num()-1)),a.get_foodCarried(), a._id);
-		System.out.println("isis"+_id);
 	}
 
 	@Override
@@ -94,7 +93,6 @@ public class ZSISIS extends ISIS {
 	}
 
 	private boolean is_a_terminal_node(Graph g) {
-		System.out.println("Id is: "+_id);
 		Vertex goal = ((Yazidi)getAgent(1-_id, g)).get_goal();
 		if((!goal.view_yazidi().isEmpty()))
 				for(Agent y: goal.view_yazidi())

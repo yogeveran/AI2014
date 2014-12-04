@@ -26,12 +26,12 @@ public class Graph {
 		_vertices = new Vector<Vertex>(); 
 		_agents = new Vector<Agent>();
 
-		
+		//Copy Vertices
 		for(Vertex v: g.get_vertices()){
 			Vertex newV = new Vertex(v.get_num(),v.view_supplies());
 			_vertices.add(newV);
 		}
-
+		//Copy agents
 		for(Agent a: g._agents){
 			if(a instanceof ZSYazidi){
 				_agents.add(new ZSYazidi((ZSYazidi)a,_vertices));
@@ -40,7 +40,7 @@ public class Graph {
 				_agents.add(new ZSISIS((ZSISIS)a,_vertices));
 			}
 		}
-		
+		//Copy Edges
 		for(Vertex v: g.get_vertices()){
 			for(Edge e: v.view_neighbors()){
 				Edge newE = new Edge(_vertices.get((int) (e.get_target().get_num()-1)), e.get_weight());
@@ -88,7 +88,7 @@ public class Graph {
 				System.out.println("Which agent is working now::::::::::::::::::::::::: " + a);
 				if(a.getCost()!=Double.POSITIVE_INFINITY){
 					g.printWorld();
-					Action act = a.getAction(new Graph(g));
+					Action act = a.getAction(g);
 					switch(act.get_type()){
 					case NoOp:
 						caseNoOp(a);
