@@ -10,11 +10,12 @@ public class ZSYazidi extends Yazidi {
 	public ZSYazidi(ZSYazidi a, Vector<Vertex> _vertices) {
 		super(_vertices.get((int) (a._location.get_num()-1)), _vertices.get((int) (a._goal.get_num()-1)), a._foodCarried, a._id);
 		_vertices.get((int) (a._location.get_num()-1)).addYazidi(this);
+		super._cost=a._cost;
 	}
 
 	@Override
 	public Action getAction(Graph g) {
-		int depth = 10;
+		int depth = g._horizon;
 		double alpha = Double.NEGATIVE_INFINITY;
 		double beta = Double.POSITIVE_INFINITY;
 		Action chosen = new Action(ActionType.NoOp, null);

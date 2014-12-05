@@ -5,16 +5,18 @@ public class ZSISIS extends ISIS {
 
 	public ZSISIS(Vertex _location, int _foodCarried, int id) {
 		super(_location, _foodCarried, id);
+		
 	}
 
 	public ZSISIS(ZSISIS a, Vector<Vertex> _vertices) {
 		super(_vertices.get((int) (a._location.get_num()-1)),a.get_foodCarried(), a._id);
 		_vertices.get((int) (a._location.get_num()-1)).addIsis(this);
+		super.setCost(a.getCost());
 	}
 
 	@Override
 	public Action getAction(Graph g) {
-		int depth = 10;
+		int depth = g._horizon;
 		double alpha = Double.NEGATIVE_INFINITY;
 		double beta = Double.POSITIVE_INFINITY;
 		Action chosen = new Action(ActionType.NoOp, null);

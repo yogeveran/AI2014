@@ -17,6 +17,8 @@ public class Graph {
 	private Graph(){
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
+		_horizon = Integer.MAX_VALUE;
+		gt = GameType.ZeroSum;
 	}
 	public Graph(Vertex[] vertices){
 		_vertices = new Vector<Vertex>(Arrays.asList(vertices));
@@ -25,7 +27,8 @@ public class Graph {
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
 		_agents = new Vector<Agent>();
-
+		_horizon = g._horizon;
+		gt=g.gt;
 		//Copy Vertices
 		for(Vertex v: g.get_vertices()){
 			Vertex newV = new Vertex(v.get_num(),v.view_supplies());
@@ -68,7 +71,7 @@ public class Graph {
 
 		//addAgents(g);
 
-		runSimulation(g);
+		g.runSimulation(g);
 
 
 	}
@@ -80,7 +83,7 @@ public class Graph {
 		return g;
 	}
 
-	private static void runSimulation(Graph g) {
+	private  void runSimulation(Graph g) {
 		System.out.println("Running Simulation:");
 		while(!shouldStop(g)){
 			System.out.println("-------------------------------------------------");
@@ -100,6 +103,8 @@ public class Graph {
 						break;
 					}
 				}
+				if(GameType.ZeroSum==this.gt)
+					_agents.get(1).setCost(_agents.get(0).getCost());
 			}
 			//g.printWorld();
 			//g.printScores();
@@ -144,10 +149,14 @@ public class Graph {
 		return sameLoc||noFood||atGoal;
 	}
 	private static void caseNoOp(Agent a) {
-		if(a instanceof Yazidi)
-			removeFood((Yazidi)a);
-		if(a instanceof Human)
-			removeFood((Human)a);
+		if(a instanceof Yazidi) {
+			Yazidi yaz = (Yazidi)a;
+			removeFood(yaz);
+		}
+		if(a instanceof Human) {
+			Human hum = (Human)a;
+			removeFood(hum);
+		}
 		a.addCost(-1);
 	}
 	private static void caseTraverse(Agent a, Action act) {
@@ -168,7 +177,7 @@ public class Graph {
 	private static void Traverse(Human a, Vertex vertex) {
 		if(!vertex.view_isis().isEmpty()||(a.findEdge(vertex).get_weight()>a.get_foodCarried())){
 			removeFood(a);
-			a.addCost(1);
+			a.addCost(-1);
 		}else{
 			double cost = a.findEdge(vertex).get_weight()*a.get_foodCarried();
 			int edgeWeight = (int) a.findEdge(vertex).get_weight();
@@ -188,17 +197,18 @@ public class Graph {
 		}
 	}
 	private static void Traverse(Yazidi a, Vertex vertex) {
-		if(!vertex.view_isis().isEmpty()||(a.findEdge(vertex).get_weight()>a.get_foodCarried())){
+		int edgeWeight = (int) a.findEdge(vertex).get_weight();
+		int foodCarried = a.get_foodCarried();
+		double cost = edgeWeight*foodCarried;
+		if(!vertex.view_isis().isEmpty()||(edgeWeight>foodCarried)){
 			removeFood(a);
 			a.addCost(-1);
 		}else{
-			double cost = a.findEdge(vertex).get_weight()*a.get_foodCarried();
-			int edgeWeight = (int) a.findEdge(vertex).get_weight();
 			a.get_location().view_yazidi().remove(a);
 			a.set_location(vertex);
 			vertex.view_yazidi().add(a);
 			a.addCost(-cost);
-			a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies()-edgeWeight);
+			a.set_foodCarried(foodCarried+vertex.takeSupplies()-edgeWeight);
 		}
 
 	}
@@ -456,6 +466,8 @@ public class Graph {
 			caseTraverse(a, act);
 			break;
 		}
+		if(GameType.ZeroSum==this.gt)
+			_agents.get(1).setCost(-_agents.get(0).getCost());
 		return this;
 	}
 

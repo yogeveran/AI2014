@@ -44,7 +44,7 @@ public abstract class ISIS extends Agent {
 
 	@Override
 	public void addCost(double cost) {
-		// TODO Auto-generated method stub
+		_cost+=cost;
 		
 	}
 

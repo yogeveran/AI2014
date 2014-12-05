@@ -11,6 +11,7 @@ public abstract class Agent {
 	public abstract Action getAction(Graph g);
 	public abstract void addCost(double cost);
 	public abstract double getCost();
+	public abstract void setCost(double cost);
 	public abstract void printAgent();
 	public abstract void printAgentScore();
 	protected Action Convert(Action chosen, Graph g) {
@@ -28,7 +29,8 @@ public abstract class Agent {
 			      for( ActionGraph ag: g.getActions(getAgent(_id, g))){//TODO CHECK
 			    	  	Graph g2 = ag.getG();
 			    	  	Action child = ag.getAct();
-			      		alpha = Double.max(alpha, alphabeta(g2.apply(child, getAgent(_id, g2)), depth - 1, alpha, beta, false));
+			      		double alphabeta = alphabeta(g2.apply(child, getAgent(_id, g2)), depth - 1, alpha, beta, false);
+						alpha = Double.max(alpha, alphabeta);
 			      		if (beta <= alpha)
 			              break;// (* beta cut-off *)
 			      	}
@@ -38,7 +40,8 @@ public abstract class Agent {
 				  for( ActionGraph ag: g.getActions(getAgent(1-_id, g))){//TODO CHECK
 					  	Graph g2 = ag.getG();
 			    	  	Action child = ag.getAct();
-			      	  beta = Double.min(beta, alphabeta(g2.apply(child, getAgent(1- _id, g2)), depth - 1, alpha, beta, true));
+			      	  double alphabeta = alphabeta(g2.apply(child, getAgent(1- _id, g2)), depth - 1, alpha, beta, true);
+					beta = Double.min(beta, alphabeta);
 			          if (beta <= alpha)
 			              break;// (* alpha cut-off *)
 			      	}
@@ -53,7 +56,7 @@ public abstract class Agent {
 		return null;
 	}
 	private boolean cutoffTest(double depth, Graph g) {
-		return (depth == 0) || is_a_terminal_node(g);
+		return (depth <= 0) || is_a_terminal_node(g);
 	}
 	private double Eval(Graph g) {
 		if(is_a_terminal_node(g)){
