@@ -89,4 +89,8 @@ public abstract class ISIS extends Agent {
 		// TODO Auto-generated method stub
 		printAgent();
 	}
+	
+	public void Traverse(Graph graph, Vertex get_target){
+		graph.Traverse(this, get_target);
+	}
 	}

@@ -94,6 +94,7 @@ public abstract class Agent {
 			return a._location;
 		return null;
 	}
+	public abstract void Traverse(Graph graph, Vertex get_target);
 	
 
 }

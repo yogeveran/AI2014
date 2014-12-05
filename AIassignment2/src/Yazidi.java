@@ -92,5 +92,10 @@ public abstract class Yazidi extends Agent {
 		printAgent();
 		
 	}
+	
+	@Override
+	public void Traverse(Graph graph, Vertex get_target){
+		graph.Traverse(this, get_target);
+	}
 
 }

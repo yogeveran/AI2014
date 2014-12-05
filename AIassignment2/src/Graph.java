@@ -12,17 +12,17 @@ public class Graph {
 	private Vector<Vertex> _vertices;
 	private Vector<Agent> _agents;
 	int _horizon = Integer.MAX_VALUE;
-	
 	GameType gt;
+	
+	public Graph(Vertex[] vertices){
+		_vertices = new Vector<Vertex>(Arrays.asList(vertices));
+		_agents = new Vector<Agent>();
+	}
 	private Graph(){
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
 		_horizon = Integer.MAX_VALUE;
 		gt = GameType.ZeroSum;
-	}
-	public Graph(Vertex[] vertices){
-		_vertices = new Vector<Vertex>(Arrays.asList(vertices));
-		_agents = new Vector<Agent>();
 	}
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
@@ -54,6 +54,21 @@ public class Graph {
 
 
 	}
+	
+	public static String getLine(Scanner s) {
+		String line = s.nextLine(); 
+		return line;
+	}
+	public static void main(String[] args) {
+		Graph g = initGraph();
+
+		//addAgents(g);
+
+		g.runSimulation(g);
+
+
+	}
+	
 	public static  Graph makePowerGraph(Graph g){
 		Graph powerGraph =  new Graph(g);
 		for(Vertex a: powerGraph.get_vertices()){
@@ -66,65 +81,39 @@ public class Graph {
 		}
 		return powerGraph;
 	}
-	public static void main(String[] args) {
-		Graph g = initGraph();
 
-		//addAgents(g);
-
-		g.runSimulation(g);
-
-
+	private static int getAgentGoalVertex(Graph g,String[] s) {
+				if(g.getVertices().size()==0){
+					System.err.println("Why did you not add vertices?");
+					System.exit(-1);
+					}
+				return Integer.decode(s[3]);
+}
+	private static int getAgentStartVertex(Graph g,String[] s) {
+		if(g.getVertices().size()==0){
+			System.err.println("Why did you not add vertices?");
+			System.exit(-1);
+			}
+		return Integer.decode(s[2]);
 	}
-	
+	private static int getAgentType(String[] s) {
+				int type = Integer.decode(s[1]);
+				if(0<type && type<4)
+					return type;
+				return -1;
+	}
 	private static Graph initGraph() {
 		Graph g = new Graph();
 		g.buildGraph("graphs/graph.txt");
 		g.printGraph();
 		return g;
 	}
-
-	private  void runSimulation(Graph g) {
-		System.out.println("Running Simulation:");
-		while(!shouldStop(g)){
-			System.out.println("-------------------------------------------------");
-			for(Agent a: g.get_agents()){
-				System.out.println("Agent is working now: " + a + " At Loc:"+a._location.get_num());
-				if(a.getCost()!=Double.POSITIVE_INFINITY){
-					//g.printWorld();
-					Action act = a.getAction(g);
-					switch(act.get_type()){
-					case NoOp:
-						System.out.println("Chose NoOp");
-						caseNoOp(a);
-						break;
-					case Traverse:
-						System.out.println("Chose To Traverse to: v"+act.get_target().get_num());
-						caseTraverse(a, act);
-						break;
-					}
-				}
-				if(GameType.ZeroSum==this.gt)
-					_agents.get(1).setCost(_agents.get(0).getCost());
-			}
-			//g.printWorld();
-			//g.printScores();
+	private static void removeFood(Yazidi a) {
+		a.set_foodCarried(a.get_foodCarried()-1);
+		if(a.get_foodCarried()<0){
+			a.setCost(Double.NEGATIVE_INFINITY);
+			a.get_location().removeYazidi(a);
 		}
-
-	}
-	private void printScores() {
-		for(Agent a: _agents)
-			a.printAgentScore();
-		
-	}
-	private void printWorld() {
-		System.out.println("Vertices:");
-		for(Vertex v: _vertices)
-			v.printVertex();
-		System.out.println();
-		System.out.println("Agents:");
-		for(Agent a: _agents)
-			a.printAgent();
-
 	}
 	private static boolean shouldStop(Graph g) {
 /*		int yazidi = 0;
@@ -148,33 +137,71 @@ public class Graph {
 
 		return sameLoc||noFood||atGoal;
 	}
-	private static void caseNoOp(Agent a) {
-		if(a instanceof Yazidi) {
-			Yazidi yaz = (Yazidi)a;
-			removeFood(yaz);
+
+
+	public Graph apply(Action act,Agent a) {
+		switch(act.get_type()){
+		case NoOp:
+			caseNoOp(a);
+			break;
+		case Traverse:
+			caseTraverse(a, act);
+			break;
 		}
-		if(a instanceof Human) {
-			Human hum = (Human)a;
-			removeFood(hum);
-		}
-		a.addCost(-1);
+		if(GameType.ZeroSum==this.gt)
+			_agents.get(1).setCost(-_agents.get(0).getCost());
+		return this;
 	}
-	private static void caseTraverse(Agent a, Action act) {
-		if (a instanceof Yazidi) {
-			Yazidi new_a = (Yazidi) a;
-			Traverse(new_a,act.get_target());
-		}else if (a instanceof ISIS) {
-			ISIS new_a = (ISIS) a;
-			Traverse(new_a,act.get_target());
+	public Vector<Agent> get_agents() {
+		return _agents;
+	}
+	public Vector<Vertex> get_vertices() {
+		return _vertices;
+	}
+	public Vector<ActionGraph> getActions(Agent agent) {
+		Vector<ActionGraph> res = new Vector<ActionGraph>();
+		
+		for(Edge e: agent._location.view_neighbors()){
+			Graph g2 = new Graph(this);
+			Vertex dest = g2._vertices.get((int) (e.get_target().get_num())-1);
+			
+			Action act = new Action(ActionType.Traverse, dest);
+			res.add(new ActionGraph(g2, act));
 		}
-		else if(a instanceof Human){
-			Human new_a = (Human) a;
-			Traverse(new_a,act.get_target());
-		}
+		res.add(new ActionGraph(new Graph(this), new Action(ActionType.NoOp, null)));
+//		for(ActionGraph ag: res)
+//			System.out.print(ag.getAct()+",  ");
+//		System.out.println();
+		return res;
+	}
+
+	public Vertex getAgentLocation(int i) {
+		for(Vertex v: _vertices)
+			if(!v.view_yazidi().isEmpty())
+				for(Agent y: v.view_yazidi())
+					if(y._id==i)
+						return v;
+		return null;
 	}
 
 
-	private static void Traverse(Human a, Vertex vertex) {
+	public Vector<Vertex> getVertices(){
+		return _vertices;
+	}
+
+
+	public void printGraph(){
+		for(Vertex v:_vertices)
+			v.printNeighbors();
+	}
+	public void removeFood(Human a) {
+		a.set_foodCarried(a.get_foodCarried()-1);
+		if(a.get_foodCarried()<0){
+			a.setCost(Double.NEGATIVE_INFINITY);
+			a.get_location().removeHuman(a);
+		}
+	}
+	public  void Traverse(Human a, Vertex vertex) {
 		if(!vertex.view_isis().isEmpty()||(a.findEdge(vertex).get_weight()>a.get_foodCarried())){
 			removeFood(a);
 			a.addCost(-1);
@@ -189,14 +216,21 @@ public class Graph {
 		}
 
 	}
-	private static void removeFood(Human a) {
-		a.set_foodCarried(a.get_foodCarried()-1);
-		if(a.get_foodCarried()<0){
-			a.setCost(Double.NEGATIVE_INFINITY);
-			a.get_location().removeHuman(a);
-		}
+
+	public void Traverse(ISIS a, Vertex vertex) {
+		a.get_location().view_isis().remove(a);
+		a.set_location(vertex);
+		vertex.view_isis().add(a);
+		for(Yazidi y: vertex.view_yazidi())
+			y.setCost(Double.POSITIVE_INFINITY);
+		for(Human y: vertex.view_human())
+			y.setCost(Double.POSITIVE_INFINITY);
+		vertex.removeYazidi();
+		vertex.removeHuman();
+		a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies());
 	}
-	private static void Traverse(Yazidi a, Vertex vertex) {
+
+	public void Traverse(Yazidi a, Vertex vertex) {
 		int edgeWeight = (int) a.findEdge(vertex).get_weight();
 		int foodCarried = a.get_foodCarried();
 		double cost = edgeWeight*foodCarried;
@@ -212,27 +246,6 @@ public class Graph {
 		}
 
 	}
-	private static void Traverse(ISIS a, Vertex vertex) {
-		a.get_location().view_isis().remove(a);
-		a.set_location(vertex);
-		vertex.view_isis().add(a);
-		for(Yazidi y: vertex.view_yazidi())
-			y.setCost(Double.POSITIVE_INFINITY);
-		for(Human y: vertex.view_human())
-			y.setCost(Double.POSITIVE_INFINITY);
-		vertex.removeYazidi();
-		vertex.removeHuman();
-		a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies());
-	}
-
-	private static void removeFood(Yazidi a) {
-		a.set_foodCarried(a.get_foodCarried()-1);
-		if(a.get_foodCarried()<0){
-			a.setCost(Double.NEGATIVE_INFINITY);
-			a.get_location().removeYazidi(a);
-		}
-	}
-
 
 	private void addAgent(String[] s) {
 		int agentStartVertex = 0;
@@ -264,58 +277,6 @@ public class Graph {
 		}
 	}
 
-
-	public Vector<Vertex> get_vertices() {
-		return _vertices;
-	}
-	public Vector<Agent> get_agents() {
-		return _agents;
-	}
-	public static String getLine(Scanner s) {
-		String line = s.nextLine(); 
-		return line;
-	}
-
-	private static int getAgentGoalVertex(Graph g,String[] s) {
-				if(g.getVertices().size()==0){
-					System.err.println("Why did you not add vertices?");
-					System.exit(-1);
-					}
-				return Integer.decode(s[3]);
-}
-
-	private static int getAgentStartVertex(Graph g,String[] s) {
-		if(g.getVertices().size()==0){
-			System.err.println("Why did you not add vertices?");
-			System.exit(-1);
-			}
-		return Integer.decode(s[2]);
-	}
-
-	private static int getAgentType(String[] s) {
-				int type = Integer.decode(s[1]);
-				if(0<type && type<4)
-					return type;
-				return -1;
-	}
-
-	private void buildGraph(String inputFile){
-		try (Stream<String> stream = Files.lines(Paths.get(inputFile),Charset.defaultCharset())) {
-			stream.forEach(this::parseln);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} 
-	}
-
-	public Vector<Vertex> getVertices(){
-		return _vertices;
-	}
-
-	public void printGraph(){
-		for(Vertex v:_vertices)
-			v.printNeighbors();
-	}
-
 	private void addEdge(int firstVertex, int secondVertex,int weight) {
 		getVertex(firstVertex).addEdge(getVertex(secondVertex),weight);
 		getVertex(secondVertex).addEdge(getVertex(firstVertex),weight);	
@@ -336,7 +297,6 @@ public class Graph {
 
 	}
 
-
 	private void addYazidi(int agentStartVertex, int agentGoalVertex,int id) {
 		Yazidi yazidi = null;
 		switch(gt){
@@ -352,6 +312,31 @@ public class Graph {
 		}
 		this._agents.add(yazidi);
 		_vertices.get(agentStartVertex-1).addYazidi(yazidi);
+	}
+
+	private void buildGraph(String inputFile){
+		try (Stream<String> stream = Files.lines(Paths.get(inputFile),Charset.defaultCharset())) {
+			stream.forEach(this::parseln);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} 
+	}
+
+	private void caseNoOp(Agent a) {
+		if(a instanceof Yazidi) {
+			Yazidi yaz = (Yazidi)a;
+			removeFood(yaz);
+		}
+		if(a instanceof Human) {
+			Human hum = (Human)a;
+			removeFood(hum);
+		}
+		a.addCost(-1);
+	}
+
+
+	private void caseTraverse(Agent a, Action act) {
+		a.Traverse(this,act.get_target());
 	}
 
 	private String getEdgeWeight(String[] edge) {
@@ -375,22 +360,34 @@ public class Graph {
 		return Integer.decode(String.valueOf(line[1]));
 	}
 
+	private boolean isAgent(String line) {
+		return line.contains("#A");
+	}
+
 	private boolean isEdge(String line) {
 		return line.contains("#E");
+	}
+
+	private boolean isGameType(String line) {
+		return line.contains("#G");
+	}
+
+	private boolean isHorizon(String line) {
+		return line.contains("#H");
 	}
 
 	private boolean isMissingVertex(String[] edge) {
 		return getFirstVertex(edge)>_vertices.size() || getSecondVertex(edge)>_vertices.size();
 	}
 
+
+
 	private boolean isNegativeWeight(String[] edge) {
 		return Integer.decode(getEdgeWeight(edge))<0;
 	}
-
 	private boolean isVertex(String line) {
 		return line.contains("#V");
 	}
-
 	private void parseln(String line){
 		if(isGameType(line)){
 			String gtype[] = line.split(" ");
@@ -421,54 +418,51 @@ public class Graph {
 			addAgent(line.split(" "));
 		}
 	}
-
-
-
-	private boolean isGameType(String line) {
-		return line.contains("#G");
-	}
-	private boolean isHorizon(String line) {
-		return line.contains("#H");
-	}
-	private boolean isAgent(String line) {
-		return line.contains("#A");
-	}
-	public Vertex getAgentLocation(int i) {
-		for(Vertex v: _vertices)
-			if(!v.view_yazidi().isEmpty())
-				for(Agent y: v.view_yazidi())
-					if(y._id==i)
-						return v;
-		return null;
-	}
-	public Vector<ActionGraph> getActions(Agent agent) {
-		Vector<ActionGraph> res = new Vector<ActionGraph>();
+	private void printScores() {
+		for(Agent a: _agents)
+			a.printAgentScore();
 		
-		for(Edge e: agent._location.view_neighbors()){
-			Graph g2 = new Graph(this);
-			Vertex dest = g2._vertices.get((int) (e.get_target().get_num())-1);
-			
-			Action act = new Action(ActionType.Traverse, dest);
-			res.add(new ActionGraph(g2, act));
-		}
-		res.add(new ActionGraph(new Graph(this), new Action(ActionType.NoOp, null)));
-//		for(ActionGraph ag: res)
-//			System.out.print(ag.getAct()+",  ");
-//		System.out.println();
-		return res;
 	}
-	public Graph apply(Action act,Agent a) {
-		switch(act.get_type()){
-		case NoOp:
-			caseNoOp(a);
-			break;
-		case Traverse:
-			caseTraverse(a, act);
-			break;
+	private void printWorld() {
+		System.out.println("Vertices:");
+		for(Vertex v: _vertices)
+			v.printVertex();
+		System.out.println();
+		System.out.println("Agents:");
+		for(Agent a: _agents)
+			a.printAgent();
+
+	}
+	private  void runSimulation(Graph g) {
+		System.out.println("Running Simulation:");
+		while(!shouldStop(g)){
+			System.out.println("-------------------------------------------------");
+			for(Agent a: g.get_agents()){
+				System.out.println("Agent is working now: " + a + " At Loc:"+a._location.get_num());
+				if(a.getCost()!=Double.POSITIVE_INFINITY){
+					//g.printWorld();
+					Action act = a.getAction(g);
+					switch(act.get_type()){
+					case NoOp:
+						System.out.println("Chose NoOp");
+						caseNoOp(a);
+						break;
+					case Traverse:
+						System.out.println("Chose To Traverse to: v"+act.get_target().get_num());
+						caseTraverse(a, act);
+						break;
+					}
+				}
+				if(GameType.ZeroSum==g.gt){
+					_agents.get(1).setCost(_agents.get(0).getCost());
+					if(shouldStop(g))
+						break;
+				}
+			}
+			//g.printWorld();
+			//g.printScores();
 		}
-		if(GameType.ZeroSum==this.gt)
-			_agents.get(1).setCost(-_agents.get(0).getCost());
-		return this;
+
 	}
 
 
