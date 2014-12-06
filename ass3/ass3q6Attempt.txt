@@ -1,0 +1,40 @@
+//Natural Numbers
+Natural_number(S0)
+Natural_number(x)=>Natural_number(S(x))
+
+//Addition
+Natural_number(x)=>Plus(Natural_number(x),S0,Natural_number(x))
+Plus(x, y, z)=>Plus(x, S(y), S(z))
+
+
+=======================
+
+// NoOp Operation 
+// causes losing food, staying at same location
+// can only be done with at least one food
+// makes you stay at the same location
+for all v,s,f 
+	Loc(v,s)^Carrying(S(f),s) 
+	<=> 
+	Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))
+
+
+
+//Traverse Operation
+// causes losing food at weight of edge
+// can only be done with enough food
+// can only be done if edge exists between vertices
+// makes you move a location
+// Add food to agent of  target vertex and remove it from vertex //TODO
+//Side Note: f3 = f - Weight(e) + f2
+for all x,e,v,v2,s,f,f2,f3
+	Loc(v,s)^Edge(e,v,v2)^
+	Carrying(f,s))^Plus(x, Weight(e), f)^
+	Food(v2,f2,s)^Plus(x,f2,f3)
+	<=>
+	Loc(v2,Result(Traverse(e),s))^
+	Carrying(f3,Result(Traverse(e),s))^
+	Food(v2,S0,Result(Traverse(e),s))
+	
+//At Goal
+forall v [exists s Loc(v,s)] <=> Goal(v)
