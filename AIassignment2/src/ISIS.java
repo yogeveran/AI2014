@@ -3,7 +3,6 @@ import java.util.List;
 
 public abstract class ISIS extends Agent {
 	
-	private int _foodCarried;
 	private List<Vertex> _path;
 	private Double _cost = 0.0;
 	

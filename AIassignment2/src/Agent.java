@@ -4,6 +4,7 @@ import java.util.Vector;
 public abstract class Agent {
 	public int _id;
 	protected Vertex _location;
+	protected int _foodCarried;
 	public Agent(int id, Vertex location){
 		this._id= id;
 		this._location = location;
@@ -25,8 +26,7 @@ public abstract class Agent {
 			double beta, boolean yazidi) {
 			  if (cutoffTest(depth,g))
 			     return Eval(g);
-			  //System.out.println("what is this" + this);
-			  if(yazidi || this instanceof NZSYazidi){
+			  if (yazidi){
 			      for( ActionGraph ag: g.getActions(getAgent(_id, g))){//TODO CHECK
 			    	  	Graph g2 = ag.getG();
 			    	  	Action child = ag.getAct();
@@ -60,30 +60,60 @@ public abstract class Agent {
 		return (depth <= 0) || is_a_terminal_node(g);
 	}
 	private double Eval(Graph g) {
-		if(is_a_terminal_node(g)){
-			Agent agent = getAgent(0, g);
-			if((((Yazidi)agent).get_foodCarried()<0)||sameSpot(g))
-				return Double.NEGATIVE_INFINITY;
-			return agent.getCost();
-			}
-		else 
-			return h(g);
+		switch(g.gt){
+		case FullyCooperative:
+			System.err.println("FullyCooperative Eval Not Implemented");
+			return Double.NEGATIVE_INFINITY;
+		case ZeroSum:
+			if(is_a_terminal_node(g)){
+				Agent agent = getAgent(0, g);
+				if(isDead(g, agent))
+					return Double.NEGATIVE_INFINITY;
+				return agent.getCost();
+				}
+			else 
+				return h(g);
+		case nonZeroSum:
+			if(is_a_terminal_node(g)){
+				Agent agent = getAgent(_id, g);
+				if(isDead(g, agent))
+					return Double.NEGATIVE_INFINITY;
+				return agent.getCost();
+				}
+			else
+				return h(g);//TODO
+		default:
+			System.err.println("NoGtError");
+			return Double.NEGATIVE_INFINITY;
+		}
+	}
+	private boolean isDead(Graph g, Agent agent) {
+		return (((Yazidi)agent).get_foodCarried()<0)||sameSpot(g);
 	}
 	private double h(Graph g) {
-		Graph g2 = Graph.makePowerGraph(g);
-		Dijkstra.computePaths(g2.getAgentLocation(0), g2, false);
-		Vertex v = ((Yazidi)g2.get_agents().get(0)).get_goal();
-		return getAgent(0,g2).getCost() - v.minDistance;//Add 
+		switch(g.gt){
+		case FullyCooperative:
+			System.err.println("FullyCooperative h not implemented");
+			return Double.NEGATIVE_INFINITY;
+		case ZeroSum:
+			Graph g2 = Graph.makePowerGraph(g);
+			Dijkstra.computePaths(g2.getAgentLocation(0), g2, false);
+			Vertex v = ((Yazidi)g2.get_agents().get(0)).get_goal();
+			return getAgent(0,g2).getCost() - v.minDistance;//Add 
+		case nonZeroSum:
+			Graph g21 = Graph.makePowerGraph(g);
+			Dijkstra.computePaths(g21.getAgentLocation(_id), g21, false);
+			Vertex v1 = ((Yazidi)g21.get_agents().get(_id)).get_goal();
+			return getAgent(_id,g21).getCost() - v1.minDistance;//Add
+		default:
+			System.err.println("GameTypeError");
+			return Double.NEGATIVE_INFINITY;
+		}
+		
+
 	}
 	private boolean is_a_terminal_node(Graph g) {
-		Yazidi yazidi = (Yazidi)getAgent(0, g);
-		if(yazidi._foodCarried<0)
-			return true;
-		if(yazidi.get_goal().get_num()==yazidi._location.get_num())
-			return true;
-		if(sameSpot(g))
-			return true;
-		return false;
+		return g.shouldStop(g);
 		
 	}
 	private boolean sameSpot(Graph g) {

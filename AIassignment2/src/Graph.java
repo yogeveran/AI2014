@@ -22,8 +22,7 @@ public class Graph {
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
 		_horizon = Integer.MAX_VALUE;
-		
-		//gt = GameType.ZeroSum;
+		gt = GameType.ZeroSum;
 	}
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
@@ -42,9 +41,6 @@ public class Graph {
 			}
 			if(a instanceof ZSISIS){
 				_agents.add(new ZSISIS((ZSISIS)a,_vertices));
-			}
-			if(a instanceof NZSYazidi){
-				_agents.add(new NZSYazidi((NZSYazidi)a,_vertices));
 			}
 		}
 		//Copy Edges
@@ -119,28 +115,37 @@ public class Graph {
 			a.get_location().removeYazidi(a);
 		}
 	}
-	private static boolean shouldStop(Graph g) {
-/*		int yazidi = 0;
-		int deadOrGoal = 0;
-		for(Agent a: g.get_agents())
-			if(a instanceof Yazidi ){
-				yazidi++;
-				if((((Yazidi) a).get_location() == ((Yazidi) a).get_goal())||a.getCost() == Double.POSITIVE_INFINITY)
-					deadOrGoal++;
-			}
-			else if (a instanceof Human){
-				yazidi++;
-				if((((Human) a).get_location() == ((Human) a).get_goal())||a.getCost() == Double.POSITIVE_INFINITY)
-					deadOrGoal++;
-			}
-		return (yazidi == deadOrGoal);*/
-		Yazidi yazidi = (Yazidi) g.get_agents().get(0);
-		boolean sameLoc = (yazidi._location==g.get_agents().get(1)._location);
-		boolean noFood = ((Yazidi)yazidi)._foodCarried<0;
-		boolean atGoal = yazidi._location==yazidi.get_goal();
-		if(atGoal)
-			System.out.println("this is goal :" + yazidi._location);
-		return sameLoc||noFood||atGoal;
+	public boolean shouldStop(Graph g) {
+		
+		//TODO Case of NZS AND Semi Cooperative
+		switch(gt){
+		case FullyCooperative:
+			break;
+		case ZeroSum:
+			Yazidi yazidi = (Yazidi) g.get_agents().get(0);
+			boolean sameLoc = (yazidi._location==g.get_agents().get(1)._location);
+			boolean noFood = ((Yazidi)yazidi)._foodCarried<0;
+			boolean atGoal = yazidi._location==yazidi.get_goal();
+			return sameLoc||noFood||atGoal;
+		case nonZeroSum:
+			int dead = 0;
+			int win = 0;
+			for(Agent a: g.get_agents())
+				if(a._foodCarried<0)
+					dead++;
+			for(Agent a: g.get_agents())
+				if(((Yazidi)a).get_goal()==a._location)
+					win++;
+			if(win+dead==g.get_agents().size())
+				return true;
+			return false;
+		default:
+			break;
+		
+		}
+		System.err.println("No GameTypeError");
+		return true;
+
 	}
 
 
@@ -155,8 +160,6 @@ public class Graph {
 		}
 		if(GameType.ZeroSum==this.gt)
 			_agents.get(1).setCost(-_agents.get(0).getCost());
-		if(GameType.nonZeroSum==this.gt)
-			_agents.get(1).setCost(-_agents.get(0).getCost()); 
 		return this;
 	}
 	public Vector<Agent> get_agents() {
@@ -213,13 +216,19 @@ public class Graph {
 			removeFood(a);
 			a.addCost(-1);
 		}else{
-			double cost = a.findEdge(vertex).get_weight()*a.get_foodCarried();
 			int edgeWeight = (int) a.findEdge(vertex).get_weight();
+			int foodCarried = a.get_foodCarried();
+			double cost = edgeWeight*foodCarried;
 			a.get_location().view_human().remove(a);
 			a.set_location(vertex);
-			vertex.view_human().add(a);
-			a.addCost(-cost);
-			a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies()-edgeWeight);
+			if(vertex.view_isis().isEmpty()){
+				vertex.view_human().add(a);
+				a.addCost(-cost);
+				a.set_foodCarried(foodCarried+vertex.takeSupplies()-edgeWeight);
+			}else{
+				a.setCost(Double.NEGATIVE_INFINITY);
+				a.set_foodCarried(foodCarried-edgeWeight);
+			}
 		}
 
 	}
@@ -228,10 +237,10 @@ public class Graph {
 		a.get_location().view_isis().remove(a);
 		a.set_location(vertex);
 		vertex.view_isis().add(a);
-		for(Yazidi y: vertex.view_yazidi())
-			y.setCost(Double.POSITIVE_INFINITY);
+		for(Agent y: vertex.view_yazidi())
+			y.setCost(Double.NEGATIVE_INFINITY);
 		for(Human y: vertex.view_human())
-			y.setCost(Double.POSITIVE_INFINITY);
+			y.setCost(Double.NEGATIVE_INFINITY);
 		vertex.removeYazidi();
 		vertex.removeHuman();
 		a.set_foodCarried(a.get_foodCarried()+vertex.takeSupplies());
@@ -247,9 +256,14 @@ public class Graph {
 		}else{
 			a.get_location().view_yazidi().remove(a);
 			a.set_location(vertex);
-			vertex.view_yazidi().add(a);
-			a.addCost(-cost);
-			a.set_foodCarried(foodCarried+vertex.takeSupplies()-edgeWeight);
+			if(vertex.view_isis().isEmpty()){
+				vertex.view_yazidi().add(a);
+				a.addCost(-cost);
+				a.set_foodCarried(foodCarried+vertex.takeSupplies()-edgeWeight);
+			}else{
+				a.setCost(Double.NEGATIVE_INFINITY);
+				a.set_foodCarried(foodCarried-edgeWeight);
+			}
 		}
 
 	}
@@ -461,11 +475,6 @@ public class Graph {
 					}
 				}
 				if(GameType.ZeroSum==g.gt){
-					_agents.get(1).setCost(_agents.get(0).getCost());
-					if(shouldStop(g))
-						break;
-				}
-				if(GameType.nonZeroSum==g.gt){
 					_agents.get(1).setCost(_agents.get(0).getCost());
 					if(shouldStop(g))
 						break;

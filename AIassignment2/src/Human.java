@@ -7,7 +7,6 @@ import javax.tools.JavaFileManager.Location;
 public class Human extends Agent {
 
 	private Vertex _goal;
-	private int _foodCarried;
 	private double _cost;
 	
 	public Human(Vertex _location, Vertex _goal, int _foodCarried, int id) {

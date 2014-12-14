@@ -13,7 +13,6 @@ public abstract class Yazidi extends Agent {
 	}
 	protected Vertex _goal;
 	protected double _cost;
-	protected int _foodCarried;
 	protected List<Vertex> _path;
 	
 	
