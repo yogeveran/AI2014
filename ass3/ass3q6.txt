@@ -1,13 +1,31 @@
+6) a)
+
+//arithmetic Predicates - Needed for handling food of Yazidi
 //Natural Numbers
 Natural_number(S0)
 Natural_number(x)=>Natural_number(S(x))
+CNF: (not Natural_number(x)) or Natural_number(S(x))
 
 //Addition
 Natural_number(x)=>Plus(Natural_number(x),S0,Natural_number(x))
+Natural_number(x)=>Plus(S0,Natural_number(x),Natural_number(x)) //For easy proof
+CNF:(not Natural_number(x)) OR Plus(S0,Natural_number(x),Natural_number(x))
 Plus(x, y, z)=>Plus(x, S(y), S(z))
+CNF:(not Plus(x, y, z)) or Plus(x, S(y), S(z))
 
+
+To simplify, instead of writing S(S(S(S(S0)))) I will write 4, and so on...
 
 =======================
+//Edges are undirected:
+To simplify an already long questions, i will assume that for every rule
+Edge(E1, V0, V1)
+there is also
+Edge(E1, V1, V0)
+===============
+//Equality
+forall v Equal(v,v)
+================
 
 // NoOp Operation 
 // causes losing food, staying at same location
@@ -17,6 +35,11 @@ for all v,s,f
 	Loc(v,s)^Carrying(S(f),s) 
 	<=> 
 	Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))
+Frame axiom for NoOp:
+for all s,v2,f 
+	exists v Loc(v,Result(NoOp,s))^Food(v2,f,s)^(not Equal(v,v2)) 
+	<=> 
+	Food(v2,f,Result(NoOp,s))
 
 
 
@@ -27,7 +50,7 @@ for all v,s,f
 // makes you move a location
 // Add food to agent of  target vertex and remove it from vertex //TODO
 //Side Note: f3 = f - Weight(e) + f2
-for all x,e,v,v2,s,f,f2,f3
+for all e,v,v2,s,f,f2,f3,x
 	Loc(v,s)^Edge(e,v,v2)^
 	Carrying(f,s))^Plus(x, Weight(e), f)^
 	Food(v2,f2,s)^Plus(x,f2,f3)
@@ -36,25 +59,368 @@ for all x,e,v,v2,s,f,f2,f3
 	Carrying(f3,Result(Traverse(e),s))^
 	Food(v2,S0,Result(Traverse(e),s))
 	
+	
+Frame axiom for Traverse: If there is a vertex who is not the target vertex of the Traverse, it's food won't change.
+for all s,v2,v3,f ,e
+	exists v Loc(v,Result(Traverse(e),s))^Food(v3,f,s)^Edge(e,v,v2)^(not Equal(v2,v3))
+	<=> 
+	Food(v3,f,Result(Traverse(e),s))
+	
 //At Goal
 forall v [exists s Loc(v,s)] <=> Goal(v)
 
 
 ===================================================
-First Rule
+b) A)
+//NoOp Operation
 
 for all v,s,f 
 	Loc(v,s)^Carrying(S(f),s) 
 	<=> 
 	Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))
 	
-Only need:
+We Actually don't need this but it's good practice:
 Loc(v,s)^Carrying(S(f),s) => Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))
-Translates to:
+Translates to: Break A=>B to (not A) or B
 NOT[Loc(v,s)^Carrying(S(f),s)] OR Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))
-Translates to:
+Translates to: Move not inward
 {[NOT Loc(v,s)] OR [NOT Carrying(S(f),s)]} OR [Loc(v,Result(NoOp,s))^Carrying(f,Result(NoOp,s))]
-Translates to: CNF
-[NOT Loc(v,s)] OR [NOT Carrying(S(f),s)] OR Loc(v,Result(NoOp,s))
+
+Translates to: CNF using distributive rule
+R1a:[NOT Loc(v,s)] OR [NOT Carrying(S(f),s)] OR Loc(v,Result(NoOp,s))
 AND
-[NOT Loc(v,s)] OR [NOT Carrying(S(f),s)] OR Carrying(f,Result(NoOp,s))
+R1b:[NOT Loc(v,s)] OR [NOT Carrying(S(f),s)] OR Carrying(f,Result(NoOp,s))
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+//Traverse Operation
+for all e,v,v2,s,f,f2,f3,x
+	Loc(v,s)^Edge(e,v,v2)^
+	Carrying(f,s))^Plus(x, Weight(e), f)^
+	Food(v2,f2,s)^Plus(x,f2,f3)
+	<=>
+	Loc(v2,Result(Traverse(e),s))^
+	Carrying(f3,Result(Traverse(e),s))^
+	Food(v2,S0,Result(Traverse(e),s))
+Only need:	
+	Loc(v,s)^Edge(e,v,v2)^
+	Carrying(f,s))^Plus(x, Weight(e), f)^
+	Food(v2,f2,s)^Plus(x,f2,f3)
+	=>
+	Loc(v2,Result(Traverse(e),s))^
+	Carrying(f3,Result(Traverse(e),s))^
+	Food(v2,S0,Result(Traverse(e),s))
+	
+Translates to: Break A=>B to (not A) or B
+	not [
+		Loc(v,s)^Edge(e,v,v2)^
+		Carrying(f,s))^Plus(x, Weight(e), f)^
+		Food(v2,f2,s)^Plus(x,f2,f3)
+		]
+	or
+		[
+		Loc(v2,Result(Traverse(e),s))^
+		Carrying(f3,Result(Traverse(e),s))^
+		Food(v2,S0,Result(Traverse(e),s))
+		]
+		
+Translates to: Move not inward
+		[(not Loc(v,s)) or (not Edge(e,v,v2)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(e), f)) or
+		(not Food(v2,f2,s)) or (not Plus(x,f2,f3))
+		]
+	or
+		[Loc(v2,Result(Traverse(e),s))^
+		Carrying(f3,Result(Traverse(e),s))^
+		Food(v2,S0,Result(Traverse(e),s))
+		]
+		
+Translate to: CNF using distributive rule
+	R2a:[(not Loc(v,s)) or (not Edge(e,v,v2)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(e), f)) or
+		(not Food(v2,f2,s)) or (not Plus(x,f2,f3)) or
+		Loc(v2,Result(Traverse(e),s))
+		]
+	AND
+	R2b:[(not Loc(v,s)) or (not Edge(e,v,v2)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(e), f)) or
+		(not Food(v2,f2,s)) or (not Plus(x,f2,f3)) or
+		Carrying(f3,Result(Traverse(e),s))
+		]
+	AND
+	R2c:[(not Loc(v,s)) or (not Edge(e,v,v2)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(e), f)) or
+		(not Food(v2,f2,s)) or (not Plus(x,f2,f3)) or
+		Food(v2,S0,Result(Traverse(e),s))
+		]
+		
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	
+Frame axiom for Traverse: If there is a vertex who is not the source or target vertex of the Traverse, it's food won't change.
+for all s, v2, v3,f , e
+	exists v Loc(v2,Result(Traverse(e),s))^
+	Food(v3,f,s)^Edge(e,v,v2)^
+	(not Equal(v2,v3))
+	<=> 
+	Food(v3,f,Result(Traverse(e),s))	
+
+Only need:
+	Loc(v2,Result(Traverse(e),s))^
+	Food(v3,f,s)^Edge(e,v,v2)^
+	(not Equal(v2,v3))
+	=> 
+	Food(v3,f,Result(Traverse(e),s))
+	
+Translates to: Break A=>B to (not A) or B
+	not [Loc(v2,Result(Traverse(e),s))^
+	Food(v3,f,s)^Edge(e,v,v2)^
+	(not Equal(v2,v3))]
+	or
+	Food(v3,f,Result(Traverse(e),s))
+
+Translates to: CNF -  Move not inward
+	R5:
+	(not Loc(v2,Result(Traverse(e),s)))or
+	(not Food(v3,f,s)) or
+	(not Edge(e,v,v2)) or
+	Equal(v2,v3) or 
+	Food(v3,f,Result(Traverse(e),s))
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//At Goal
+forall v [exists s Loc(v,s)] <=> Goal(v)
+
+Only need:	
+Loc(v,s) => Goal(v)
+
+Translates to: CNF using Break A=>B to (not A) or B
+(not Loc(v,s)) or Goal(v)
+======================================================================================================
+
+b) B) I will formalize a goal state as having a yazidi at V2
+so I need a state s where Loc(V2,s) or Goal(V2)
+
+
+
+This is what I need to prove: 
+	Goal(V2)
+	
+	Which will come from:
+	Loc(V2,
+		Result(Traverse(E3),
+		Result(Traverse(E1),
+		Result(Traverse(E1),S0))))
+		
+And add its negation to the KB (already in CNF):
+	not Loc(V2,Result(Traverse(E3),
+		Result(Traverse(E1),
+		Result(Traverse(E1),S0))))
+		
+b) C)
+
+RESOLVE Edge(E1,V0,V1) with R2a,R2b,R2c
+with substitution
+{e/E1, v/V0, v2/V1}
+
+to produce:
+	R2a1:[(not Loc(V0,s)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,s)) or (not Plus(x,f2,f3)) or
+		Loc(V1,Result(Traverse(E1),s))
+		]
+	AND
+	R2b1:[(not Loc(V0,s)) or
+		(not Carrying(f,s))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,s)) or (not Plus(x,f2,f3)) or
+		Carrying(f3,Result(Traverse(E1),s))
+		]
+	AND
+	R2c1:[(not Loc(V0,s))
+		(not Carrying(f,s))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,s)) or (not Plus(x,f2,f3)) or
+		Food(V1,S0,Result(Traverse(E1),s))
+		]
+
+RESOLVE Loc(V0, S0) with R2a1,R2b1,R2c1
+with substitution 
+{s/S0}
+to produce:
+	R2a2:[
+		(not Carrying(f,S0))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Loc(V1,Result(Traverse(E1),S0))
+		]
+	AND
+	R2b2:[
+		(not Carrying(f,S0))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Carrying(f3,Result(Traverse(E1),S0))
+		]
+	AND
+	R2c2:[
+		(not Carrying(f,S0))) or (not Plus(x, Weight(E1), f)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Food(V1,S0,Result(Traverse(E1),S0))
+		]
+		
+RESOLVE Carrying(1,S0) with R2a2,R2b2,R2c2
+with substitution {f/1} to produce:
+	R2a3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Loc(V1,Result(Traverse(E1),S0)
+		]
+	AND
+	R2b3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Carrying(f3,Result(Traverse(E1),S0))
+		]
+	AND
+	R2c3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Food(V1,f2,S0)) or (not Plus(x,f2,f3)) or
+		Food(V1,S0,Result(Traverse(E1),S0))
+		]
+		
+RESOLVE Food(V1,3,S0) with substitution {f2/3} to produce
+	R2a3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Plus(x,3,f3)) or
+		Loc(V1,Result(Traverse(E1),S0))
+		]
+	AND
+	R2b3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Plus(x,3,f3)) or
+		Carrying(f3,Result(Traverse(E1),S0))
+		]
+	AND
+	R2c3:[
+		(not Plus(x, Weight(E1), 1)) or
+		(not Plus(x,3,f3)) or
+		Food(V1,S0,Result(Traverse(E1),S0))
+		]
+
+*****		NOW WE NEED TO PROVE R3:Plus(S0, 1, 1))
+resolve
+(not Natural_number(x)) OR Plus(S0,Natural_number(x),Natural_number(x))
+with
+Natural_number(1)
+sub:{x/1}
+
+Comment: we actually need to prove Natural_number(1) but this is silly.
+
+RESOLVE R3:Plus(S0, 1, 1)) with R2a3,R2b3,R2c3 with sub{x/S0} to produce
+	R2a4:[
+		(not Plus(S0,3,f3)) or
+		Loc(V1,Result(Traverse(E1),S0))
+		]
+	AND
+	R2b4:[
+		(not Plus(S0,3,f3)) or
+		Carrying(f3,Result(Traverse(E1),S0))
+		]
+	AND
+	R2c4:[
+		(not Plus(S0,3,f3)) or
+		Food(V1,S0,Result(Traverse(E1),S0))
+		]
+*****		NOW WE NEED TO PROVE R4:Plus(S0, 3, 3))
+SAME AS BEFORE...
+RESOLVE R3:Plus(S0, 3, 3)) with R2a4,R2b4,R2c4 with sub{f3/3} to produce
+	R2a5: Loc(V1,Result(Traverse(E1),S0))
+	AND
+	R2b5: Carrying(3,Result(Traverse(E1),S0))
+	AND
+	R2c5: Food(V1,S0,Result(Traverse(E1),S0))
+	
+OK! Now we have proved the move to V1 and that the Food was picked up and now we are carrying it.
+The same will be done to the traverse back to V0 through E1, only difference here is that we have left over food and we need frame axiom.
+
+Frame Axiom.
+Resolve R5 with R2a5 sub{v2\V1,e\E1,s\S0} to produce:
+	
+	(not Food(v3,f,S0)) or
+	(not Edge(E1,v,V1)) or
+	Equal(V1,v3) or 
+	Food(v3,f,Result(Traverse(E1),S0))
+
+NOW Resolve with Edge(E1,V0,V1), sub {v/V0} to produce:
+	(not Food(v3,f,S0)) or
+	Equal(V1,v3) or 
+	Food(v3,f,Result(Traverse(E1),S0))
+
+NOW Resolve with (not Equal(V1,V0)), sub {v3/V0}
+	(not Food(V0,f,S0)) or
+	Food(V0,f,Result(Traverse(E1),S0))
+
+NOW Resolve with Food(V0,0,S0)), sub {f/S0}
+	R7:Food(V0,S0,Result(Traverse(E1),S0))
+	
+
+DONE PROVING FOOD HASN'T CHANGED IN  MOVE, SAME IS DONE FOR V2 TO PRODUCE:	
+	R8:Food(V2,S0,Result(Traverse(E1),S0))
+	
+	
+--------------------------------------
+
+so quickly we will resolve all together R2a,R2b,R2c and R2a5,R2b5,R2c5,R7,R8, Edge(E1,V0,V1) with sub: {s/Result(Traverse(E1),S0), v/V1, v2/V0, e/E1, f/3, f2/S0}  to produce
+	R2a6:[
+		(not Plus(x, 1, 3)) or
+		(not Plus(x,S0,f3)) or
+		Loc(V0,Result(Traverse(E1),Result(Traverse(E1),S0)))
+		]
+	AND
+	R2b6:[
+		(not Plus(x, 1, 3)) or
+		(not Plus(x,S0,f3)) or
+		Carrying(f3,Result(Traverse(E1),Result(Traverse(E1),S0)))
+		]
+	AND
+	R2c6:[
+		(not Plus(x, 1, 3)) or
+		(not Plus(x,S0,f3)) or
+		Food(V0,S0,Result(Traverse(E1),Result(Traverse(E1),S0)))
+		]
+		
+Proving Plus(2, 1, 3)) and Plus(2,S0,2) is pretty trivial so i'll use it as an assumption.
+so quickly we will resolve all together R2a6,R2b6,R2c6 and the above Plus's with sub{x/2,f3/2} to produce:
+
+
+	
+	Loc(V0,Result(Traverse(E1),Result(Traverse(E1),S0)))
+	AND
+	Carrying(2,Result(Traverse(E1),Result(Traverse(E1),S0)))
+	AND
+	Food(V0,S0,Result(Traverse(E1),Result(Traverse(E1),S0)))
+	
+	
+OK! Now we have proved the move back to V0 and that the Food was picked up and now we are carrying it.
+Proof for no Change on Food in V2 for second move is the same as frame axiom for move from V0 TO V1.
+Proof for  Traverse from V0 TO V2 is the same As the move from V0 TO V1 is done at begining.
+
+so we now have
+
+
+	Loc(V2,
+			Result(Traverse(E3),
+			Result(Traverse(E1),
+			Result(Traverse(E1),S0))))
+	AND
+	Carrying(2,Result(Traverse(E2),Result(Traverse(E1),Result(Traverse(E1),S0))))
+	AND
+	Food(V2,S0,Result(Traverse(E2),Result(Traverse(E1),Result(Traverse(E1),S0))))
+	
+	
+We also have	not Loc(v,s) or Goal(v) which we resolve with sub{v/V2, s/ Result(Traverse(E2),Result(Traverse(E1),Result(Traverse(E1),S0)))}
+and we get Goal(V2)
+which we resolve with not Goal(V2) and get the empty clause => proved :).

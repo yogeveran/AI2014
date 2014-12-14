@@ -17,18 +17,20 @@ public class ZSISIS extends ISIS {
 	@Override
 	public Action getAction(Graph g) {
 		int depth = g._horizon;
-		double alpha = Double.NEGATIVE_INFINITY;
-		double beta = Double.POSITIVE_INFINITY;
+		Tuple<Double, Double> alpha = new Tuple<Double, Double>(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+		Tuple<Double, Double> beta = new Tuple<Double, Double>(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
 		Action chosen = new Action(ActionType.NoOp, null);
 		
 		for(ActionGraph ag: g.getActions(getAgent(_id, g))){//TODO CHECK
     	  	Graph g2 = ag.getG();
     	  	Action child = ag.getAct();
-    	  	double newBeta = alphabeta(g2.apply(child,getAgent(_id, g2)), depth - 1, alpha, beta, true);
-    	  	if(newBeta<beta)
+    	  	Tuple<Double, Double> newBeta = alphabeta(g2.apply(child,getAgent(_id, g2)), depth - 1, alpha, beta, true);
+    	  	if(newBeta.val1<beta.val1){
     	  		chosen=child;
-      		beta = Double.min(beta, newBeta);
-      		if (beta <= alpha)
+    	  		beta = newBeta;
+    	  		}
+      		
+      		if (beta.val1 <= alpha.val1)
               break;// (* beta cut-off *)
       	}
 		

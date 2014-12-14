@@ -22,7 +22,6 @@ public class Graph {
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
 		_horizon = Integer.MAX_VALUE;
-		gt = GameType.ZeroSum;
 	}
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
@@ -38,6 +37,12 @@ public class Graph {
 		for(Agent a: g._agents){
 			if(a instanceof ZSYazidi){
 				_agents.add(new ZSYazidi((ZSYazidi)a,_vertices));
+			}
+			if(a instanceof NZSYazidi){
+				_agents.add(new NZSYazidi((NZSYazidi)a,_vertices));
+			}
+			if(a instanceof FCYazidi){
+				_agents.add(new FCYazidi((FCYazidi)a,_vertices));
 			}
 			if(a instanceof ZSISIS){
 				_agents.add(new ZSISIS((ZSISIS)a,_vertices));
@@ -61,9 +66,8 @@ public class Graph {
 	}
 	public static void main(String[] args) {
 		Graph g = initGraph();
-
-		//addAgents(g);
-
+		System.out.println(g.gt);
+		
 		g.runSimulation(g);
 
 
@@ -119,15 +123,13 @@ public class Graph {
 		
 		//TODO Case of NZS AND Semi Cooperative
 		switch(gt){
-		case FullyCooperative:
-			break;
 		case ZeroSum:
 			Yazidi yazidi = (Yazidi) g.get_agents().get(0);
 			boolean sameLoc = (yazidi._location==g.get_agents().get(1)._location);
 			boolean noFood = ((Yazidi)yazidi)._foodCarried<0;
 			boolean atGoal = yazidi._location==yazidi.get_goal();
 			return sameLoc||noFood||atGoal;
-		case nonZeroSum:
+		default:
 			int dead = 0;
 			int win = 0;
 			for(Agent a: g.get_agents())
@@ -139,13 +141,7 @@ public class Graph {
 			if(win+dead==g.get_agents().size())
 				return true;
 			return false;
-		default:
-			break;
-		
 		}
-		System.err.println("No GameTypeError");
-		return true;
-
 	}
 
 
@@ -201,6 +197,7 @@ public class Graph {
 
 
 	public void printGraph(){
+		System.out.println(this.gt);
 		for(Vertex v:_vertices)
 			v.printNeighbors();
 	}
@@ -346,13 +343,18 @@ public class Graph {
 	private void caseNoOp(Agent a) {
 		if(a instanceof Yazidi) {
 			Yazidi yaz = (Yazidi)a;
-			removeFood(yaz);
+			if(yaz.get_location()!=yaz.get_goal()){
+				removeFood(yaz);
+				a.addCost(-1);	
+			}
 		}
 		if(a instanceof Human) {
 			Human hum = (Human)a;
-			removeFood(hum);
+			if(hum.get_location()!=hum.get_goal()){
+				removeFood(hum);
+				a.addCost(-1);	
+			}
 		}
-		a.addCost(-1);
 	}
 
 
@@ -481,7 +483,7 @@ public class Graph {
 				}
 			}
 			//g.printWorld();
-			//g.printScores();
+			g.printScores();
 		}
 
 	}

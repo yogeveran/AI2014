@@ -18,23 +18,26 @@ public class NZSYazidi extends Yazidi {
 	@Override
 	public Action getAction(Graph g) {
 		int depth = g._horizon;
-		double alpha = Double.NEGATIVE_INFINITY;
-		double beta = Double.POSITIVE_INFINITY;
+		Tuple<Double,Double> best = new Tuple<Double,Double>(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
 		Action chosen = new Action(ActionType.NoOp, null);
 		
 		for(ActionGraph ag: g.getActions(getAgent(_id, g))){//TODO CHECK
 			Graph g2 = ag.getG();
     	  	Action child = ag.getAct();
-    	  	double newAlpha = alphabeta(g2.apply(child,getAgent(_id, g2)), depth - 1, alpha, beta, false);
-    	  	if(newAlpha>alpha)
+    	  	Tuple<Double,Double> score  = maximax(g2.apply(child,getAgent(_id, g2)), depth - 1,1-_id);
+    	  	if(worseThan(best, score,_id,g)){
     	  		chosen=child;
-      		alpha = Double.max(alpha, newAlpha);
-      		if (beta <= alpha)
-              break;// (* beta cut-off *)
+    	  		best = score;
+    	  	} 
+    	  	
       	}
 		
 		return Convert(chosen,g);
 	}
+
+
+
+	
 
 
 }
