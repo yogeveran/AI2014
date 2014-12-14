@@ -25,7 +25,8 @@ public abstract class Agent {
 			double beta, boolean yazidi) {
 			  if (cutoffTest(depth,g))
 			     return Eval(g);
-			  if (yazidi){
+			  //System.out.println("what is this" + this);
+			  if(yazidi || this instanceof NZSYazidi){
 			      for( ActionGraph ag: g.getActions(getAgent(_id, g))){//TODO CHECK
 			    	  	Graph g2 = ag.getG();
 			    	  	Action child = ag.getAct();

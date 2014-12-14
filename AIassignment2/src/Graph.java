@@ -22,7 +22,8 @@ public class Graph {
 		_vertices = new Vector<Vertex>();
 		_agents = new Vector<Agent>();
 		_horizon = Integer.MAX_VALUE;
-		gt = GameType.ZeroSum;
+		
+		//gt = GameType.ZeroSum;
 	}
 	Graph(Graph g){
 		_vertices = new Vector<Vertex>(); 
@@ -41,6 +42,9 @@ public class Graph {
 			}
 			if(a instanceof ZSISIS){
 				_agents.add(new ZSISIS((ZSISIS)a,_vertices));
+			}
+			if(a instanceof NZSYazidi){
+				_agents.add(new NZSYazidi((NZSYazidi)a,_vertices));
 			}
 		}
 		//Copy Edges
@@ -134,7 +138,8 @@ public class Graph {
 		boolean sameLoc = (yazidi._location==g.get_agents().get(1)._location);
 		boolean noFood = ((Yazidi)yazidi)._foodCarried<0;
 		boolean atGoal = yazidi._location==yazidi.get_goal();
-
+		if(atGoal)
+			System.out.println("this is goal :" + yazidi._location);
 		return sameLoc||noFood||atGoal;
 	}
 
@@ -150,6 +155,8 @@ public class Graph {
 		}
 		if(GameType.ZeroSum==this.gt)
 			_agents.get(1).setCost(-_agents.get(0).getCost());
+		if(GameType.nonZeroSum==this.gt)
+			_agents.get(1).setCost(-_agents.get(0).getCost()); 
 		return this;
 	}
 	public Vector<Agent> get_agents() {
@@ -454,6 +461,11 @@ public class Graph {
 					}
 				}
 				if(GameType.ZeroSum==g.gt){
+					_agents.get(1).setCost(_agents.get(0).getCost());
+					if(shouldStop(g))
+						break;
+				}
+				if(GameType.nonZeroSum==g.gt){
 					_agents.get(1).setCost(_agents.get(0).getCost());
 					if(shouldStop(g))
 						break;

@@ -6,4 +6,10 @@ public class FCYazidi extends Yazidi {
 		// TODO Auto-generated constructor stub
 	}
 
+	@Override
+	public Action getAction(Graph g) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
