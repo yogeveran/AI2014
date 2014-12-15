@@ -120,8 +120,6 @@ public class Graph {
 		}
 	}
 	public boolean shouldStop(Graph g) {
-		
-		//TODO Case of NZS AND Semi Cooperative
 		switch(gt){
 		case ZeroSum:
 			Yazidi yazidi = (Yazidi) g.get_agents().get(0);

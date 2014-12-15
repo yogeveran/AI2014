@@ -79,7 +79,7 @@ public abstract class ISIS extends Agent {
 	public void printAgent() {
 		String status =  ((_cost == Double.POSITIVE_INFINITY) ? "dead" : "alive");
 		System.out.println();
-		System.out.println("I"+_id+":score("+_cost+"):loc("+_location+"):status(" +status+ ")" );
+		System.out.println("I"+_id+":score("+-_cost+"):loc("+_location+"):status(" +status+ ")" );
 		
 	}
 

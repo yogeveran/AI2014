@@ -1,8 +1,8 @@
-#G ZeroSum
+#G FullyCooperative
 #H 1000
 #V 4 4 3 1 0
 #E 1 3 4
 #E 2 3 3
 #E 3 4 1
 #A 2 1 4
-#A 3 2 4
+#A 2 2 4
